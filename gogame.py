@@ -1,6 +1,5 @@
 import pygame
 import numpy as np
-import time
 import itertools
 import sys
 import networkx as nx
@@ -15,8 +14,8 @@ BOARD_BORDER = 75
 STONE_RADIUS = 22
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-TURN_POS = (BOARD_BORDER, 25)
-SCORE_POS = (BOARD_BORDER, BOARD_WIDTH - BOARD_BORDER + 25)
+TURN_POS = (BOARD_BORDER, 20)
+SCORE_POS = (BOARD_BORDER, BOARD_WIDTH - BOARD_BORDER + 30)
 DOT_RADIUS = 4
 
 
@@ -183,6 +182,10 @@ class Game:
 
         pygame.display.flip()
 
+    def pass_move(self):
+        self.black_turn = not self.black_turn
+        self.draw()
+
     def handle_click(self):
         # get board position
         x, y = pygame.mouse.get_pos()
@@ -243,20 +246,26 @@ class Game:
         )
         txt = self.font.render(score_msg, True, BLACK)
         self.screen.blit(txt, SCORE_POS)
-        turn_msg = f"{'Black' if self.black_turn else 'White'} to move"
+        turn_msg = (
+            f"{'Black' if self.black_turn else 'White'} to move. "
+            + "Click to place stone, press P to pass."
+        )
         txt = self.font.render(turn_msg, True, BLACK)
         self.screen.blit(txt, TURN_POS)
 
-        pygame.display.update()
+        pygame.display.flip()
 
     def update(self):
-        # check for events: currently only mouseclicks and game quits
+        # TODO: undo button
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
                 self.handle_click()
             if event.type == pygame.QUIT:
                 sys.exit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_p:
+                    self.pass_move()
 
 
 if __name__ == "__main__":
@@ -267,4 +276,4 @@ if __name__ == "__main__":
 
     while True:
         g.update()
-        time.sleep(0.1)
+        pygame.time.wait(100)
