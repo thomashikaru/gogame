@@ -132,6 +132,25 @@ def get_stone_groups(board, color):
     return nx.connected_components(graph)
 
 
+def is_valid_move(col, row, board):
+    """Check if placing a stone at (col, row) is valid on board
+
+    Args:
+        col (int): column number
+        row (int): row number
+        board (object): board grid (size * size matrix)
+
+    Returns:
+        boolean: True if move is valid, False otherewise
+    """
+    # TODO: check for ko situation (infinite back and forth)
+    if col < 0 or col >= board.shape[0]:
+        return False
+    if row < 0 or row >= board.shape[0]:
+        return False
+    return board[col, row] == 0
+
+
 class Game:
     def __init__(self, size):
         self.board = np.zeros((size, size))
@@ -164,20 +183,11 @@ class Game:
 
         pygame.display.flip()
 
-    def is_valid_move(self, x_idx, y_idx):
-        # check if move is out of bounds or on top of an existing stone
-        # TODO: check for ko situation (infinite back and forth)
-        if x_idx < 0 or x_idx >= self.size:
-            return False
-        if y_idx < 0 or y_idx >= self.size:
-            return False
-        return self.board[x_idx, y_idx] == 0
-
     def handle_click(self):
         # get board position
         x, y = pygame.mouse.get_pos()
         col, row = xy_to_colrow(x, y, self.size)
-        if not self.is_valid_move(col, row):
+        if not is_valid_move(col, row, self.board):
             self.ZOINK.play()
             return
 
@@ -197,7 +207,8 @@ class Game:
                     self.board[i, j] = 0
                 self.prisoners[self_color] += len(group)
 
-        # handle invalid stone placement (no liberties and no capture)
+        # handle special case of invalid stone placement
+        # this must be done separately because we need to know if capture resulted
         if not capture_happened:
             group = None
             for group in get_stone_groups(self.board, self_color):
@@ -212,15 +223,6 @@ class Game:
         self.CLICK.play()
         self.black_turn = not self.black_turn
         self.draw()
-
-    def update(self):
-        # check for events: currently only mouseclicks and game quits
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.handle_click()
-            if event.type == pygame.QUIT:
-                sys.exit()
 
     def draw(self):
         # draw stones - filled circle and antialiased ring
@@ -246,6 +248,15 @@ class Game:
         self.screen.blit(txt, TURN_POS)
 
         pygame.display.update()
+
+    def update(self):
+        # check for events: currently only mouseclicks and game quits
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.handle_click()
+            if event.type == pygame.QUIT:
+                sys.exit()
 
 
 if __name__ == "__main__":
