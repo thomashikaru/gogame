@@ -121,11 +121,12 @@ def get_stone_groups(board, color):
     Returns:
         List[List[Tuple[int, int]]]: list of list of (col, row) pairs, each defining a group
     """
+    size = board.shape[0]
     color_code = 1 if color == "black" else 2
     xs, ys = np.where(board == color_code)
-    graph = nx.grid_graph(dim=[board.shape[0], board.shape[0]])
+    graph = nx.grid_graph(dim=[size, size])
     stones = set(zip(xs, ys))
-    all_spaces = set(itertools.product(range(board.shape[0]), range(board.shape[0])))
+    all_spaces = set(itertools.product(range(size), range(size)))
     stones_to_remove = all_spaces - stones
     graph.remove_nodes_from(stones_to_remove)
     return nx.connected_components(graph)
